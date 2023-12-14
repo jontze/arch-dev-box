@@ -1,0 +1,113 @@
+---
+- name: Setup
+  hosts: all
+  tasks:
+    - name: Update Pacman Cache and Upgrade - 'pacman -Syu'
+      become: true
+      community.general.pacman:
+        update_cache: true
+        upgrade: true
+    - name: Install git and base-devel package
+      become: true
+      community.general.pacman:
+        name:
+          - git
+          - base-devel
+        state: present
+    - name: Install yay
+      block:
+        - name: Check if yay is installed
+          ansible.builtin.command: yay --version
+          register: yay_installed
+          failed_when: false
+          changed_when: false
+        - name: Clone yay repo
+          ansible.builtin.git:
+            repo: https://aur.archlinux.org/yay-bin.git
+            dest: /tmp/yay
+          when: yay_installed.rc != 0
+          changed_when: yay_installed.rc != 0
+        - name: Make yay
+          ansible.builtin.command:
+            cmd: makepkg -si --noconfirm
+            chdir: /tmp/yay
+          when: yay_installed.rc != 0
+          changed_when: yay_installed.rc != 0
+    - name: Upgrade the system using yay, only act on AUR packages.
+      kewlfft.aur.aur:
+        update_cache: true
+        upgrade: true
+        use: yay
+        aur_only: true
+
+- name: Setup Terminal
+  hosts: all
+  tasks:
+    - name: Install Terminal Tools
+      become: true
+      community.general.pacman:
+        name:
+          - zsh
+          - zsh-autosuggestions
+          - atuin
+          - bat
+          - bottom
+          - eza
+          - chezmoi
+          - ctop
+          - htop
+          - bandwhich
+          - dust
+          - fd
+          - jq
+          - neovim
+          - neofetch
+          - nmap
+          - os-prober
+          - ripgrep
+          - starship
+          - wget
+          - which
+          - tldr
+          - zoxide
+          - zellij
+          - just
+        state: present
+    - name: Install Terminal Tools (AUR)
+      kewlfft.aur.aur:
+        name:
+          - nvm
+        state: present
+        aur_only: true
+    - name: Set ZSH as default shell
+      become: true
+      ansible.builtin.user:
+        # Ansible_user will be undefined as the playbook is running
+        # locally, so we need to use ansible_env.USER instead.
+        name: "{{ ansible_user | default(ansible_env.USER) }}"
+        shell: /bin/zsh
+        state: present
+
+- name: Setup Rust Development Environment
+  hosts: all
+  tasks:
+    - name: Install Packages
+      become: true
+      community.general.pacman:
+        name:
+          - rust
+          - cargo-audit
+          - cargo-binstall
+          - cargo-dist
+          - cargo-edit
+          - cargo-expand
+          - cargo-generate
+          - cargo-hack
+          - cargo-msrv
+          - cargo-outdated
+          - cargo-semver-checks
+          - cargo-tarpaulin
+          - cargo-tauri
+          - cargo-update
+          - cargo-watch
+        state: present
