@@ -11,12 +11,14 @@ Vagrant.configure("2") do |config|
   config.vm.provision "file", source: "playbook.yml", destination: "playbook.yml"
   # Copy the Ansible requirements
   config.vm.provision "file", source: "requirements.yml", destination: "requirements.yml"
-  # Copy the .zshtc file
+  # Copy the .zshrc file
   config.vm.provision "file", source: ".zshrc", destination: ".zshrc"
   # Copy Starship shell prompt
   config.vm.provision "file", source: "starship.toml", destination: ".config/starship.toml"
   # Copy the user justfile
   config.vm.provision "file", source: ".user.justfile", destination: ".user.justfile"
+  # Copy global git config
+  config.vm.provision "file", source: "vm-gitconfig", destination: ".gitconfig"
 
   # Run Ansible on the Vagrant VM
   config.vm.provision "ansible_local" do |ansible|
