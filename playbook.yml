@@ -14,6 +14,33 @@
           - git
           - base-devel
         state: present
+    - name: Install Docker
+      block:
+        - name: Install docker and docker-compose
+          become: true
+          community.general.pacman:
+            name:
+              - docker
+              - docker-compose
+            state: present
+        - name: Enable docker service
+          become: true
+          ansible.builtin.service:
+            name: docker
+            state: started
+            enabled: true
+        - name: Verify docker is running
+          become: true
+          ansible.builtin.systemd:
+            name: docker
+            state: started
+            enabled: true
+        - name: Add user to docker group
+          become: true
+          ansible.builtin.user:
+            name: "{{ ansible_user | default(ansible_env.USER) }}"
+            groups: docker
+            append: true
     - name: Install yay
       block:
         - name: Check if yay is installed
@@ -95,7 +122,7 @@
       become: true
       community.general.pacman:
         name:
-          - rust
+          - rustup
           - cargo-audit
           - cargo-binstall
           - cargo-dist
@@ -111,3 +138,7 @@
           - cargo-update
           - cargo-watch
         state: present
+    - name: Set Rustup Default Toolchain
+      become: true
+      ansible.builtin.command:
+        cmd: rustup default stable
